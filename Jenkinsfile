@@ -10,21 +10,19 @@ pipeline {
 
     stage('Setup Python') {
       steps {
-        // Crée un virtualenv et installe les dépendances sous Windows
-        bat """
-        python -m venv venv
-        venv\\Scripts\\Activate.bat
-        pip install --upgrade pip
-        pip install -r requirements.txt
+        // Crée un venv puis installe pip + dépendances
+        powershell """
+          python -m venv venv
+          .\\venv\\Scripts\\python.exe -m pip install --upgrade pip
+          .\\venv\\Scripts\\python.exe -m pip install -r requirements.txt
         """
       }
     }
 
     stage('Unit Tests') {
       steps {
-        bat """
-        venv\\Scripts\\Activate.bat
-        pytest tests/unit -q --junitxml=unit-results.xml
+        powershell """
+          .\\venv\\Scripts\\python.exe -m pytest tests/unit -q --junitxml=unit-results.xml
         """
       }
       post {
@@ -36,19 +34,19 @@ pipeline {
 
     stage('Start Flask App') {
       steps {
-        // Lance le serveur Flask en tâche de fond
-        bat """
-        start /B venv\\Scripts\\Activate.bat && python -m flask --app app run --port 5000
+        // Démarre le serveur Flask en arrière‐plan
+        powershell """
+          Start-Process -NoNewWindow -FilePath .\\venv\\Scripts\\python.exe -ArgumentList '-m flask --app app run --port 5000'
         """
-        sleep 5  // laisse le temps au serveur de démarrer
+        // Laisse le temps au serveur de démarrer
+        sleep 5
       }
     }
 
     stage('Functional Tests') {
       steps {
-        bat """
-        venv\\Scripts\\Activate.bat
-        pytest tests/functional -q --junitxml=functional-results.xml
+        powershell """
+          .\\venv\\Scripts\\python.exe -m pytest tests/functional -q --junitxml=functional-results.xml
         """
       }
       post {
@@ -64,7 +62,7 @@ pipeline {
       echo 'Build terminé avec succès !'
     }
     failure {
-      echo 'Build échoué, voir logs pour diagnostic.'
+      echo 'Build échoué – consultez la console pour les erreurs.'
     }
   }
 }
