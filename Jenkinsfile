@@ -1,28 +1,28 @@
+// Jenkinsfile (adapté pour Windows et Sysnative)
 pipeline {
   agent any
 
   stages {
-    stage('Checkout SCM') {
+    stage('Checkout') {
       steps {
         checkout scm
       }
     }
-
     stage('Setup Python') {
       steps {
-        // Crée un venv puis installe pip + dépendances
-        powershell """
-          python -m venv venv
-          .\\venv\\Scripts\\python.exe -m pip install --upgrade pip
-          .\\venv\\Scripts\\python.exe -m pip install -r requirements.txt
+        bat """
+        set "SYSNATIVE=%SystemRoot%\\Sysnative"
+        "%SYSNATIVE%\\cmd.exe" /c python -m venv venv
+        "%SYSNATIVE%\\cmd.exe" /c venv\\Scripts\\python.exe -m pip install --upgrade pip
+        "%SYSNATIVE%\\cmd.exe" /c venv\\Scripts\\python.exe -m pip install -r requirements.txt
         """
       }
     }
-
     stage('Unit Tests') {
       steps {
-        powershell """
-          .\\venv\\Scripts\\python.exe -m pytest tests/unit -q --junitxml=unit-results.xml
+        bat """
+        set "SYSNATIVE=%SystemRoot%\\Sysnative"
+        "%SYSNATIVE%\\cmd.exe" /c venv\\Scripts\\python.exe -m pytest tests/unit -q --junitxml=unit-results.xml
         """
       }
       post {
@@ -31,22 +31,20 @@ pipeline {
         }
       }
     }
-
     stage('Start Flask App') {
       steps {
-        // Démarre le serveur Flask en arrière‐plan
-        powershell """
-          Start-Process -NoNewWindow -FilePath .\\venv\\Scripts\\python.exe -ArgumentList '-m flask --app app run --port 5000'
+        bat """
+        set "SYSNATIVE=%SystemRoot%\\Sysnative"
+        start /B "%SYSNATIVE%\\cmd.exe" /c venv\\Scripts\\python.exe -m flask --app app run --port 5000
         """
-        // Laisse le temps au serveur de démarrer
         sleep 5
       }
     }
-
     stage('Functional Tests') {
       steps {
-        powershell """
-          .\\venv\\Scripts\\python.exe -m pytest tests/functional -q --junitxml=functional-results.xml
+        bat """
+        set "SYSNATIVE=%SystemRoot%\\Sysnative"
+        "%SYSNATIVE%\\cmd.exe" /c venv\\Scripts\\python.exe -m pytest tests/functional -q --junitxml=functional-results.xml
         """
       }
       post {
@@ -62,7 +60,7 @@ pipeline {
       echo 'Build terminé avec succès !'
     }
     failure {
-      echo 'Build échoué – consultez la console pour les erreurs.'
+      echo 'Build échoué – voir console pour détails.'
     }
   }
 }
