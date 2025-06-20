@@ -1,0 +1,17 @@
+<!doctype html>
+<html>
+<head><title>Login</title></head>
+<body>
+  <h1>Login</h1>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+      <div class="alert alert-{{cat}}">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+  <form method="post">
+    <input name="username" placeholder="Username">
+    <input name="password" placeholder="Password" type="password">
+    <button type="submit">Login</button>
+  </form>
+</body>
+</html>
